@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+    
+before_install:
+    - docker build -t rossles/react-test -f ./client/Dockerfile.dev ./client
+    
+script:
+    - docker run rossles/react-test npm test -- --coverage
+    
+after_success:
+    - docker build -t rossles/multi-client ./client
+    - docker build -t rossles/multi-nginx ./nginx
+    - docker build -t rossles/multi-server ./server
+    - docker build -t rossles/multi-worker ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Push images to Docker Hub
+    - docker push rossles/multi-client
+    - docker push rossles/multi-nginx
+    - docker push rossles/multi-server
+    - docker push rossles/multi-worker
